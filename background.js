@@ -9,7 +9,6 @@ chrome.tabs.executeScript( {
 }, function(selection) {
     let query = selection[0];
     console.log('this is selection ', query);
-    console.log('calling wiki function')
     wikiApi(query);
 });
 
@@ -21,16 +20,14 @@ function wikiApi(query) {
         console.log('inside jquery');
         $.ajax({
             type: "GET",
-            url: `https://en.wikipedia.org/w/api.php?action=parse&format=json&prop=text&page=${apiQueryString}&callback=?`,
+            url: `https://en.wikipedia.org/w/api.php?action=parse&format=json&prop=text|headhtml&page=${apiQueryString}&callback=?`,
             contentType: "application/json; charset=utf-8",
             async: false,
             dataType: "json",
             success: function (data, textStatus, jqXHR) {
                 console.log(data);
-                // let parser = json.parse.text["*"];
                 let temp = data.parse.text["*"];
-                outputHTML = temp.replaceAll("//upload", "http:/upload");
- //               outputHTML = tempoutputHTML.replaceAll("/wiki", "https://en.wikipedia.org/wiki")
+                outputHTML = cleanHTML(temp);
             },
             error: function (errorMessage) {
                 console.log(errorMessage)
@@ -44,7 +41,9 @@ function wikiApi(query) {
     });
 };
 
-// src="http://upload.wikimedia.org/wikipedia/common
-
-
-//<img alt="Main page of the English Wikipedia" src="//upload.wikimedia.org/wikipedia/commons/thumb/8/87/Wikipedia_Main_Page.png/300px-Wikipedia_Main_Page.png" width="300" height="572" class="thumbborder" srcset="//upload.wikimedia.org/wikipedia/commons/thumb/8/87/Wikipedia_Main_Page.png/450px-Wikipedia_Main_Page.png 1.5x, //upload.wikimedia.org/wikipedia/commons/thumb/8/87/Wikipedia_Main_Page.png/600px-Wikipedia_Main_Page.png 2x" data-file-width="1280" data-file-height="2440">
+function cleanHTML (html) {
+    let imagesFixed = html.replaceAll("//upload", "http:/upload");
+    let linksFixed = imagesFixed.replaceAll("href=\"/wiki", "href=\"https://en.wikipedia.org/wiki");
+    let anchorsFixed = linksFixed.replaceAll("<a href", "<a target=\"_blank\" href");
+    return anchorsFixed;
+}
